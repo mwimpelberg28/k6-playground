@@ -39,7 +39,8 @@ export function checkCartAction(res) {
 
 export function checkCheckout(res) {
   return check(res, {
-    'order placed':    (r) => r.status === 200 && r.body.includes('Your order is placed'),
-    'response < 3s':   (r) => r.timings.duration < 3000,
+    'order placed':  (r) => r.status === 200 && r.body.includes('Your order is complete!'),
+    'response < 3s': (r) => r.timings.duration < 3000,
   });
 }
+

@@ -1,4 +1,3 @@
-// tests/browser/browser.js
 import { browser } from 'k6/browser';
 import { check, sleep } from 'k6';
 import { Trend, Rate } from 'k6/metrics';
@@ -38,7 +37,6 @@ export async function browserJourney() {
   const page = await browser.newPage();
 
   try {
-    // Homepage
     await page.goto(BASE_URL, { waitUntil: 'networkidle' });
 
     const ttfb = await page.evaluate(() => {
@@ -70,3 +68,34 @@ export async function browserJourney() {
         for (const entry of list.getEntries()) {
           if (!entry.hadRecentInput) value += entry.value;
         }
+      });
+      obs.observe({ type: 'layout-shift', buffered: true });
+      setTimeout(() => { obs.disconnect(); resolve(value); }, 2000);
+    }));
+    clsTrend.add(cls);
+
+    const ok = check(page, {
+      'page title present': async () => (await page.title()).length > 0,
+
+      'no error in url':    () => !page.url().includes('error'),
+    });
+    uiErrors.add(!ok);
+
+    await sleep(2);
+
+    const productId = PRODUCT_IDS[Math.floor(Math.random() * PRODUCT_IDS.length)];
+    await page.goto(`${BASE_URL}/product/${productId}`, { waitUntil: 'networkidle' });
+
+    check(page, {
+      'product page loaded': () => !page.url().includes('error'),
+    });
+
+    await sleep(2);
+
+  } catch (e) {
+    console.error(`Browser journey failed: ${e.message}`);
+    uiErrors.add(1);
+  } finally {
+    await page.close();
+  }
+}
