@@ -1,0 +1,23 @@
+{
+  "scenarios": {
+    "browser": {
+      "executor": "ramping-vus",
+      "exec": "browserFlow",
+      "stages": [
+        { "duration": "1m", "target": 2 },
+        { "duration": "3m", "target": 2 },
+        { "duration": "1m", "target": 0 }
+      ],
+      "options": {
+        "browser": { "type": "chromium" }
+      }
+    }
+  },
+  "thresholds": {
+    "browser_lcp":       ["p(75)<2500"],
+    "browser_fcp":       ["p(75)<1800"],
+    "browser_ttfb":      ["p(75)<800"],
+    "browser_cls":       ["avg<0.1"],
+    "browser_ui_errors": ["rate<0.05"]
+  }
+}

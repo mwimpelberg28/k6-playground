@@ -1,13 +1,4 @@
-// lib/checks.js
 import { check } from 'k6';
-
-export function checkPage(res, expectedContent) {
-  return check(res, {
-    'status 200':      (r) => r.status === 200,
-    'no server error': (r) => r.status !== 500,
-    'has content':     (r) => expectedContent ? r.body.includes(expectedContent) : r.body.length > 0,
-  });
-}
 
 export function checkRedirectOrOk(res) {
   return check(res, {
@@ -17,9 +8,9 @@ export function checkRedirectOrOk(res) {
 
 export function checkHome(res) {
   return check(res, {
-    'status 200':      (r) => r.status === 200,
-    'shows products':  (r) => r.body.includes('Hot Products'),
-    'response < 2s':   (r) => r.timings.duration < 2000,
+    'status 200':     (r) => r.status === 200,
+    'shows products': (r) => r.body.includes('Hot Products'),
+    'response < 2s':  (r) => r.timings.duration < 2000,
   });
 }
 
@@ -33,7 +24,7 @@ export function checkProductPage(res) {
 
 export function checkCartAction(res) {
   return check(res, {
-    'cart accepted':   (r) => r.status === 200 || r.status === 302,
+    'cart accepted': (r) => r.status === 200 || r.status === 302,
   });
 }
 
@@ -43,4 +34,3 @@ export function checkCheckout(res) {
     'response < 3s': (r) => r.timings.duration < 3000,
   });
 }
-

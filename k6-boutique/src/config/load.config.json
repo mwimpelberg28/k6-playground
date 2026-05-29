@@ -1,0 +1,56 @@
+{
+  "scenarios": {
+    "browsers": {
+      "executor": "ramping-vus",
+      "exec": "browseFlow",
+      "stages": [
+        { "duration": "1m", "target": 20 },
+        { "duration": "3m", "target": 20 },
+        { "duration": "1m", "target": 0  }
+      ],
+      "tags": { "journey": "browser" }
+    },
+    "shoppers": {
+      "executor": "ramping-vus",
+      "exec": "shopperFlow",
+      "stages": [
+        { "duration": "1m", "target": 5 },
+        { "duration": "3m", "target": 5 },
+        { "duration": "1m", "target": 0 }
+      ],
+      "tags": { "journey": "shopper" }
+    },
+    "currencyUsers": {
+      "executor": "constant-arrival-rate",
+      "rate": 2,
+      "timeUnit": "1s",
+      "duration": "5m",
+      "preAllocatedVUs": 5,
+      "maxVUs": 10,
+      "exec": "currencyFlow",
+      "tags": { "journey": "currency" }
+    }
+  },
+  "thresholds": {
+    "http_req_failed":                       ["rate<0.05"],
+    "http_req_duration":                     ["p(95)<3000"],
+    "checks":                                ["rate>0.90"],
+    "http_req_duration{journey:browser}":    ["p(95)<2000"],
+    "http_req_duration{journey:shopper}":    ["p(95)<4000"],
+    "http_req_duration{journey:currency}":   ["p(95)<2000"],
+
+    "group_duration{group:::homepage}":                     ["avg<500"],
+    "group_duration{group:::browse product}":               ["avg<400"],
+    "group_duration{group:::view product}":                 ["avg<400"],
+    "group_duration{group:::add to cart}":                  ["avg<800"],
+    "group_duration{group:::add second item}":              ["avg<800"],
+    "group_duration{group:::view cart}":                    ["avg<500"],
+    "group_duration{group:::checkout}":                     ["avg<4000"],
+    "group_duration{group:::set currency}":                 ["avg<500"],
+    "group_duration{group:::browse after currency switch}": ["avg<500"],
+    "group_duration{group:::view product in currency}":     ["avg<400"],
+
+    "boutique_checkout_duration": ["p(95)<5000"],
+    "boutique_checkout_success":  ["rate>0.80"]
+  }
+}
