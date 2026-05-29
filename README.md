@@ -1,78 +1,116 @@
-# k6 Mastery Suite
+# k6 Boutique Test Suite
 
-A comprehensive k6 test suite demonstrating the full spectrum of k6 capabilities, integrated with Grafana Cloud. Built against the [k6 demo API](https://test-api.k6.io).
+A k6 performance test suite built against the [Online Boutique](https://github.com/GoogleCloudPlatform/microservices-demo) demo app. Demonstrates smoke, load, stress, and browser testing with a modular, webpack-based project structure.
 
-## Coverage
+## Project Structure
 
-| Test Type | Script | Purpose |
+```
+k6-boutique/
+├── src/
+│   ├── config/              # Test options as JSON — select at runtime via CONFIG_FILE
+│   │   ├── smoke.config.json
+│   │   ├── load.config.json
+│   │   ├── stress.config.json
+│   │   └── browser.config.json
+│   ├── scenarios/           # User journey flows — chain scripts together
+│   │   ├── browseFlow.js
+│   │   ├── shopperFlow.js
+│   │   ├── currencyFlow.js
+│   │   ├── stressFlow.js
+│   │   └── browserFlow.js
+│   ├── scripts/             # Individual page actions wrapped in groups
+│   │   ├── home.js
+│   │   ├── product.js
+│   │   ├── cart.js
+│   │   ├── checkout.js
+│   │   └── currency.js
+│   ├── pages/               # Page Object Model classes for browser tests
+│   │   ├── HomePage.js
+│   │   └── ProductPage.js
+│   ├── lib/                 # Shared HTTP client and check functions
+│   │   ├── client.js
+│   │   └── checks.js
+│   ├── main.js              # Entry point for all HTTP tests (smoke / load / stress)
+│   └── browser.js           # Entry point for browser tests
+├── dist/                    # Webpack output — generated, not committed
+├── webpack.config.js
+├── package.json
+└── .babelrc
+```
+
+### Layer responsibilities
+
+| Layer | Folder | Role |
 |---|---|---|
-| Smoke | `tests/smoke/smoke.js` | Sanity check — 1 VU, confirms baseline functionality |
-| Load | `tests/load/load.js` | Realistic traffic, validates thresholds under normal conditions |
-| Stress | `tests/stress/stress.js` | Pushes beyond capacity to find breaking points |
-| Soak | `tests/soak/soak.js` | Sustained load over time — catches memory leaks and degradation |
-| Browser | `tests/browser/browser.js` | Real Chrome via k6 Browser API — frontend performance |
-| Synthetics | `tests/synthetics/synthetic.js` | Scheduled availability and latency monitoring |
-
-## Shared Library
-
-Common logic lives in `lib/` and is imported by all tests:
-
-- `lib/client.js` — HTTP helpers, auth, base URL config
-- `lib/checks.js` — Reusable check assertions
-- `lib/thresholds.js` — Standard threshold definitions
+| Config | `src/config/` | Scenarios, stages, thresholds — swapped via `CONFIG_FILE` |
+| Scenarios | `src/scenarios/` | User journey flows that chain scripts + sleep |
+| Scripts | `src/scripts/` | One action per file: HTTP request inside a named `group()` + check |
+| Pages (POM) | `src/pages/` | Browser page object classes |
+| Lib | `src/lib/` | Low-level HTTP helpers and reusable check assertions |
 
 ## Prerequisites
 
-- [k6 installed](https://k6.io/docs/get-started/installation/)
-- Grafana Cloud account with k6 access
-- `K6_CLOUD_TOKEN` set in your environment
+- [k6](https://k6.io/docs/get-started/installation/)
+- Node.js + npm (for the webpack build step)
+- Target app running at `BASE_URL` (default: `http://10.4.20.2`)
+
+## Setup
+
+```bash
+cd k6-boutique
+npm install
+npm run build        # produces dist/test.main.js and dist/test.browser.js
+```
 
 ## Running Tests
 
+Config files are loaded at runtime — `CONFIG_FILE` is relative to the `dist/` directory.
+
 ```bash
-# Local run
-k6 run tests/smoke/smoke.js
+# HTTP tests — pick a config
+k6 run dist/test.main.js -e CONFIG_FILE=../src/config/smoke.config.json
+k6 run dist/test.main.js -e CONFIG_FILE=../src/config/load.config.json
+k6 run dist/test.main.js -e CONFIG_FILE=../src/config/stress.config.json
 
-# With environment overrides
-k6 run -e BASE_URL=https://test-api.k6.io -e VUS=10 tests/load/load.js
+# Browser test
+k6 run dist/test.browser.js -e CONFIG_FILE=../src/config/browser.config.json
 
-# Cloud run (results in Grafana Cloud)
-k6 cloud tests/load/load.js
+# Or via npm scripts (builds first automatically)
+npm run smoke
+npm run load
+npm run stress
+npm run browser
 ```
 
-## Grafana Cloud Integration
+### Grafana Cloud
 
-Results from cloud runs appear automatically in **Grafana Cloud → k6**. A custom dashboard is provided in `dashboards/k6-overview.json` — import it via the Grafana UI or `scripts/import-dashboard.sh`.
+```bash
+k6 cloud run dist/test.main.js -e CONFIG_FILE=../src/config/load.config.json
+```
+
+## Test Types
+
+| Config | Scenarios | Purpose |
+|---|---|---|
+| `smoke.config.json` | 1 VU, 5 iterations of `shopperFlow` | Sanity check — confirms baseline functionality |
+| `load.config.json` | `browseFlow` + `shopperFlow` + `currencyFlow` ramping in parallel | Realistic multi-journey load |
+| `stress.config.json` | `stressFlow` ramping to 150 VUs | Finds breaking points, tracks degraded responses |
+| `browser.config.json` | `browserFlow` with Chromium | Frontend performance — LCP, FCP, TTFB, CLS |
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `BASE_URL` | `https://test-api.k6.io` | Target API base URL |
-| `VUS` | test-specific | Virtual user count override |
-| `DURATION` | test-specific | Duration override |
-| `K6_CLOUD_TOKEN` | required for cloud | Grafana Cloud k6 token |
+| `CONFIG_FILE` | `../src/config/smoke.config.json` | Path to the JSON config file (relative to `dist/`) |
+| `BASE_URL` | `http://10.4.20.2` | Target application base URL |
 
-## Repo Structure
+## Thresholds
 
+Each config defines both request-level and group-level SLAs. Group thresholds use the `group_duration` metric with the `group:::` tag syntax:
+
+```json
+"group_duration{group:::checkout}":    ["avg<4000"],
+"group_duration{group:::browse product}": ["avg<400"]
 ```
-k6-mastery/
-├── tests/
-│   ├── smoke/
-│   ├── load/
-│   ├── stress/
-│   ├── soak/
-│   ├── browser/
-│   └── synthetics/
-├── lib/
-│   ├── client.js
-│   ├── checks.js
-│   └── thresholds.js
-├── dashboards/
-│   └── k6-overview.json
-├── scripts/
-│   └── import-dashboard.sh
-└── docs/
-    ├── architecture.md
-    └── grafana-cloud-setup.md
-```
+
+Request name tags (`name: 'get-product'`) are applied to all HTTP calls in `lib/client.js` to prevent "too many series" issues from dynamic URL segments.
