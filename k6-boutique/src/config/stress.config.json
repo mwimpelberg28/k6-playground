@@ -4,21 +4,20 @@
       "executor": "ramping-vus",
       "exec": "stressFlow",
       "stages": [
-        { "duration": "1m", "target": 10  },
-        { "duration": "2m", "target": 30  },
-        { "duration": "2m", "target": 60  },
+        { "duration": "2m", "target": 50  },
         { "duration": "2m", "target": 100 },
         { "duration": "2m", "target": 150 },
-        { "duration": "3m", "target": 0   }
-      ]
+        { "duration": "2m", "target": 100 },
+        { "duration": "2m", "target": 0   }
+      ],
+      "gracefulStop": "30s"
     }
   },
   "thresholds": {
-    "http_req_failed":   ["rate<0.20"],
-    "http_req_duration": ["p(99)<10000"],
-
-    "group_duration{group:::homepage}":      ["avg<3000"],
+    "http_req_failed":                        ["rate<0.10"],
+    "http_req_duration":                      ["p(95)<5000"],
+    "group_duration{group:::homepage}":       ["avg<1000"],
     "group_duration{group:::browse product}": ["avg<2000"],
-    "group_duration{group:::add to cart}":   ["avg<3000"]
+    "checks":                                 ["rate>0.70"]
   }
 }

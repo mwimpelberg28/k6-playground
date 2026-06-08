@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "k6 performance test suite for Online Boutique",
   "scripts": {
-    "build":   "webpack",
-    "smoke":   "npm run build && k6 run dist/test.main.js    -e CONFIG_FILE=../src/config/smoke.config.json",
-    "load":    "npm run build && k6 run dist/test.main.js    -e CONFIG_FILE=../src/config/load.config.json",
-    "stress":  "npm run build && k6 run dist/test.main.js    -e CONFIG_FILE=../src/config/stress.config.json",
-    "browser": "npm run build && k6 run dist/test.browser.js -e CONFIG_FILE=../src/config/browser.config.json"
+    "build":         "webpack",
+    "smoke":         "npm run build && k6 run       dist/test.main.js    -e CONFIG_FILE=../src/config/smoke.config.json",
+    "load":          "npm run build && k6 run       dist/test.main.js    -e CONFIG_FILE=../src/config/load.config.json",
+    "stress":        "npm run build && k6 run       dist/test.main.js    -e CONFIG_FILE=../src/config/stress.config.json",
+    "browser":       "npm run build && k6 run       dist/test.browser.js -e CONFIG_FILE=../src/config/browser.config.json",
+    "cloud-smoke":   "npm run build && k6 cloud run dist/test.main.js    -e CONFIG_FILE=../src/config/smoke.config.json   -e BASE_URL=https://imitation-laxative-iphone.ngrok-free.dev",
+    "cloud-load":    "npm run build && k6 cloud run dist/test.main.js    -e CONFIG_FILE=../src/config/load.config.json    -e BASE_URL=https://imitation-laxative-iphone.ngrok-free.dev",
+    "cloud-stress":  "npm run build && k6 cloud run dist/test.main.js    -e CONFIG_FILE=../src/config/stress.config.json  -e BASE_URL=https://imitation-laxative-iphone.ngrok-free.dev",
+    "cloud-browser": "npm run build && k6 cloud run dist/test.browser.js -e CONFIG_FILE=../src/config/browser.config.json -e BASE_URL=https://imitation-laxative-iphone.ngrok-free.dev"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",
